@@ -1,5 +1,6 @@
 ### Описание
 Проект Foodgram собирает рецепты.
+Позволяет формировать список покупок.
 
 
 ### Ссылка на документцию
@@ -8,15 +9,62 @@ http://localhost/api/docs/
 
 
 ### Стек технологий
-Python 3.7
+
+Python 3.9
 
 Django REST framework
 
 Django ORM
 
+Docker
+
+Gunicorn
+
+nginx
+
+PostgreSQL
+
 Git
 
-Djoser
+### Шаблон файла .env
+
+DB_ENGINE=django.db.backends.postgresql # указываем, что работаем с postgresql
+
+DB_NAME= # имя базы данных
+
+POSTGRES_USER= # логин для подключения к базе данных
+
+POSTGRES_PASSWORD= # пароль для подключения к БД (установите свой)
+
+DB_HOST=db # название сервиса (контейнера)
+
+DB_PORT=5432 # порт для подключения к БД
+
+### Запуск проекта в контейнере
+
+cd infra
+
+docker-compose up -d --build
+
+docker-compose exec web python manage.py migrate
+
+docker-compose exec web python manage.py createsuperuser
+
+docker-compose exec web python manage.py collectstatic --no-input
+
+### Сделать резервную копию
+
+docker-compose exec web python manage.py dumpdata > fixtures.json
+
+### Восстановить из резервной копии
+
+docker cp fixtures.json <имя контейнера>:app/
+
+docker-compose exec web python manage.py loaddata fixtures.json
+
+### Заполнить БД ингридиентами
+
+docker-compose exec web python3 manage.py upload_db
 
 ## Примеры
 Полная спецификация api
