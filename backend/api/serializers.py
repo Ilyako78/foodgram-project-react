@@ -4,12 +4,13 @@ from django.db.models import F
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
-from recipes.models import Ingredient, IngredientInRecipe, Recipe, Tag
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import IntegerField, SerializerMethodField
 from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer
+
+from recipes.models import Ingredient, IngredientInRecipe, Recipe, Tag
 from users.models import Subscribe
 
 User = get_user_model()
@@ -40,9 +41,7 @@ class CustomUserSerializer(UserSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-        return Subscribe.objects.filter(user=user, author=obj).exists()
+        return user.is_authenticated and bool(obj.subscriber.filter(user=user))
 
 
 class SubscribeSerializer(CustomUserSerializer):
@@ -86,13 +85,22 @@ class SubscribeSerializer(CustomUserSerializer):
 class IngredientSerializer(ModelSerializer):
     class Meta:
         model = Ingredient
-        fields = '__all__'
+        fields = (
+            'id',
+            'name',
+            'measurement_unit',
+        )
 
 
 class TagSerializer(ModelSerializer):
     class Meta:
         model = Tag
-        fields = '__all__'
+        fields = (
+            'id',
+            'name',
+            'color',
+            'slug',
+        )
 
 
 class RecipeReadSerializer(ModelSerializer):
@@ -120,25 +128,21 @@ class RecipeReadSerializer(ModelSerializer):
 
     def get_ingredients(self, obj):
         recipe = obj
-        ingredients = recipe.ingredients.values(
+        return recipe.ingredients.values(
             'id',
             'name',
             'measurement_unit',
             amount=F('ingredientinrecipe__amount')
         )
-        return ingredients
 
     def get_is_favorited(self, obj):
         user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-        return user.favorites.filter(recipe=obj).exists()
+        return user.is_authenticated and bool(obj.favorites.filter(user=user))
 
     def get_is_in_shopping_cart(self, obj):
         user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-        return user.shopping_cart.filter(recipe=obj).exists()
+        return (user.is_authenticated
+                and bool(obj.shopping_cart.filter(user=user)))
 
 
 class IngredientInRecipeWriteSerializer(ModelSerializer):
@@ -146,7 +150,10 @@ class IngredientInRecipeWriteSerializer(ModelSerializer):
 
     class Meta:
         model = IngredientInRecipe
-        fields = ('id', 'amount')
+        fields = (
+            'id',
+            'amount'
+        )
 
 
 class RecipeWriteSerializer(ModelSerializer):
@@ -178,9 +185,10 @@ class RecipeWriteSerializer(ModelSerializer):
         ingredients_list = []
         for item in ingredients:
             ingredient = get_object_or_404(Ingredient, id=item['id'])
+            # Проверка того, что ингридиенты не дублируются
             if ingredient in ingredients_list:
                 raise ValidationError({
-                    'ingredients': 'Ингридиенты не могут повторяться!'
+                    'ingredients': 'Ингридиенты не могут дублироваться!'
                 })
             if int(item['amount']) <= 0:
                 raise ValidationError({
@@ -197,9 +205,10 @@ class RecipeWriteSerializer(ModelSerializer):
             })
         tags_list = []
         for tag in tags:
+            # Проверка того, что тэги не дублируются
             if tag in tags_list:
                 raise ValidationError({
-                    'tags': 'Теги должны быть уникальными!'
+                    'tags': 'Теги не могут дублироваться!'
                 })
             tags_list.append(tag)
         return value
