@@ -5,8 +5,13 @@
 
 ### Ссылка на документцию
 
-http://localhost/api/docs/
+http://51.250.82.193/api/docs/
 
+
+IP сервера 51.250.82.193
+
+Пользователь alex
+Почта для входа alex@test.ru
 
 ### Стек технологий
 
@@ -42,9 +47,13 @@ DB_PORT=5432 # порт для подключения к БД
 
 SECRET_KEY # Секретный ключ проекта
 
-### Запуск проекта в контейнере
 
-cd infra
+### Скоприовать файлы на сервер
+
+scp docker-compose.yml nginx.conf .env fixtures.json user@ip:/home/user/
+
+### Запуск проекта 
+
 
 docker-compose up -d --build
 
@@ -59,6 +68,10 @@ docker-compose exec web python manage.py collectstatic --no-input
 docker-compose exec web python manage.py dumpdata > fixtures.json
 
 ### Восстановить из резервной копии
+
+Список контейнеров
+
+sudo docker container ls 
 
 docker cp fixtures.json <имя контейнера>:app/
 
