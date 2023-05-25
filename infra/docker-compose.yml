@@ -7,9 +7,7 @@ services:
     env_file:
       - ./.env
   web:
-#    build:
-#      context: ../backend
-#      dockerfile: Dockerfile
+    build:
     image: ilyako78/foodgramm
     restart: always
     volumes:
@@ -21,9 +19,6 @@ services:
       - ./.env
 
   frontend:
-#    build:
-#      context: ../frontend
-#      dockerfile: Dockerfile
     image: ilyako78/foodgramm_front
     volumes:
       - ../frontend/:/app/result_build/

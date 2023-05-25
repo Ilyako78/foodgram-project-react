@@ -73,6 +73,10 @@ class Subscribe(models.Model):
     class Meta:
         ordering = ('-id',)
         constraints = [
+            models.CheckConstraint(
+                check=~models.Q(author=models.F('user')),
+                name='author_is_not_user'
+            ),
             UniqueConstraint(fields=['user', 'author'],
                              name='unique_subscription')
         ]

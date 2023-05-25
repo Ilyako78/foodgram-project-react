@@ -38,6 +38,9 @@ class Tag(models.Model):
     )
     slug = models.SlugField('Slug', unique=True, max_length=200)
 
+    def clean(self):
+        self.color = self.color.capitalize()
+
     class Meta:
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
@@ -55,7 +58,10 @@ class Recipe(models.Model):
         null=True,
         verbose_name='Автор',
     )
-    text = models.TextField('Описание')
+    text = models.TextField(
+        'Описание',
+        unique=True
+    )
     image = models.ImageField(
         'Изображение',
         upload_to='recipes/'
