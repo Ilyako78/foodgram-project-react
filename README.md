@@ -38,7 +38,7 @@ DB_PORT=5432 # порт для подключения к БД
 SECRET_KEY # Секретный ключ проекта
 
 
-### Скоприовать файлы на сервер
+### Скопировать файлы на сервер
 
 scp docker-compose.yml nginx.conf .env fixtures.json user@ip:/home/user/
 
